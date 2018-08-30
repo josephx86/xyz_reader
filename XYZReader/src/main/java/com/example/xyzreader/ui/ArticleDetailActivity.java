@@ -12,6 +12,7 @@ import android.support.v4.content.Loader;
 import android.support.v4.view.ViewPager;
 import android.support.v7.app.AppCompatActivity;
 import android.util.TypedValue;
+import android.view.MenuItem;
 import android.view.ViewGroup;
 
 import com.example.xyzreader.R;
@@ -31,8 +32,6 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
     private static final String CURRENT_ID_KEY = "current_id";
 
     private MyPagerAdapter mPagerAdapter;
-
-
 
     @BindView(R.id.pager)
     ViewPager mPager;
@@ -75,6 +74,18 @@ public class ArticleDetailActivity extends AppCompatActivity implements LoaderMa
             if (getIntent() != null && getIntent().getData() != null) {
                 currentId = ItemsContract.Items.getItemId(getIntent().getData());
             }
+        }
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+        switch (id) {
+            case android.R.id.home:
+                onBackPressed();
+                return true;
+            default:
+                return super.onOptionsItemSelected(item);
         }
     }
 

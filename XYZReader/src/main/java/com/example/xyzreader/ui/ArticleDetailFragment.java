@@ -9,12 +9,12 @@ import android.os.HandlerThread;
 import android.os.Process;
 import android.support.annotation.NonNull;
 import android.support.design.widget.Snackbar;
+import android.support.design.widget.SubtitleCollapsingToolbarLayout;
 import android.support.v4.app.Fragment;
 import android.support.v4.app.LoaderManager;
 import android.support.v4.app.ShareCompat;
 import android.support.v4.content.Loader;
 import android.support.v7.app.ActionBar;
-import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.text.Html;
 import android.text.SpannableString;
@@ -63,8 +63,8 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
     @BindView(R.id.toolbar)
     Toolbar toolbar;
 
-    @BindView(R.id.subtitle_tv)
-    TextView subtitleTextView;
+    @BindView(R.id.subtitle_collapsing_toolbar_layout)
+    SubtitleCollapsingToolbarLayout subtitleCollapsingToolbarLayout;
 
     @BindView(R.id.article_body)
     TextView bodyTextView;
@@ -113,11 +113,13 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
         rootView = inflater.inflate(R.layout.fragment_article_detail, container, false);
         ButterKnife.bind(this, rootView);
 
-        AppCompatActivity activity = (AppCompatActivity) getActivity();
+        ArticleDetailActivity activity = (ArticleDetailActivity) getActivity();
         if (activity != null) {
             activity.setSupportActionBar(toolbar);
             ActionBar actionBar = activity.getSupportActionBar();
             if (actionBar != null) {
+                // After adding the SubtitleCollapsingToolbarLayout, the home button is not responding to clicks.
+                // Use the ImageView to provide fall-back back navigation
                 actionBar.setDisplayHomeAsUpEnabled(true);
             }
         }
@@ -141,22 +143,36 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
         }
     }
 
+    @OnClick(R.id.back_iv)
+    public void back() {
+        Activity activity = getActivity();
+        if (activity != null) {
+            activity.onBackPressed();
+        }
+    }
+
     @OnClick(R.id.share_article_fab)
-    public void onClick() {
+    public void share() {
         Activity activity = getActivity();
         if ((activity != null) && (mCursor != null)) {
-            String address = Util.getArticleUrl(bodyTextView.getText().toString());
-            if (address == null) {
+            String shareText = bodyTextView.getText().toString();
+
+            // Let's share the first 120 chars
+            if (shareText.length() > 120) {
+                shareText = shareText.substring(0, 120) + "...";
+            }
+
+            if (shareText.isEmpty()) {
                 // Root view is coordinator layout
                 if (rootView != null) {
-                    Snackbar.make(rootView, "URL of article not found!", Snackbar.LENGTH_SHORT).show();
+                    Snackbar.make(rootView, "Failed to get article excerpt!", Snackbar.LENGTH_SHORT).show();
                 }
                 return;
             }
 
             startActivity(Intent.createChooser(ShareCompat.IntentBuilder.from(activity)
                     .setType("text/plain")
-                    .setText(address)
+                    .setText(shareText)
                     .getIntent(), getString(R.string.action_share)));
         }
     }
@@ -178,6 +194,7 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
             return;
         }
 
+
         bodyTextView.setTypeface(Util.getCachedTypeFace(bodyTextView.getContext()));
         String notApplicable = "N/A";
         Spanned spannedSubtitle;
@@ -185,7 +202,6 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
             rootView.setAlpha(0);
             rootView.setVisibility(View.VISIBLE);
             rootView.animate().alpha(1);
-            toolbar.setTitle(mCursor.getString(ArticleLoader.Query.TITLE));
 
             Date publishedDate = parsePublishedDate();
 
@@ -207,7 +223,10 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
                                 + "</font>");
 
             }
-            subtitleTextView.setText(spannedSubtitle);
+            String title = mCursor.getString(ArticleLoader.Query.TITLE);
+            toolbar.setTitle(title);
+            subtitleCollapsingToolbarLayout.setTitle(title);
+            subtitleCollapsingToolbarLayout.setSubtitle(spannedSubtitle);
             Spanned body = new SpannableString(getString(R.string.loading_article));
             bodyTextView.setText(body);
             if (bodyLoader == null) {
@@ -240,7 +259,8 @@ public class ArticleDetailFragment extends Fragment implements LoaderManager.Loa
         } else {
             rootView.setVisibility(View.GONE);
             toolbar.setTitle(notApplicable);
-            subtitleTextView.setText(notApplicable);
+            subtitleCollapsingToolbarLayout.setTitle(notApplicable);
+            subtitleCollapsingToolbarLayout.setSubtitle(notApplicable);
             bodyTextView.setText(notApplicable);
         }
     }

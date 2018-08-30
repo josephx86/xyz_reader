@@ -9,5 +9,7 @@
 
     <string name="up">Up</string>
     <string name="loading_article">Loading article... Please wait</string>
+    <string name="author_name">Author name</string>
+    <string name="article_name">Article Name</string>
 
 </resources>

@@ -30,24 +30,4 @@ public class Util {
         }
         return typeface;
     }
-
-    public static String getArticleUrl(String article) {
-        // TODO: Note for reviewer
-        // Why isn't the url part of the original JSON that provided the article?
-        // What if the article cam from another source that isn't Project Guternberg?
-        if (article != null) {
-            // I will assume the first link with http://www.gutenberg.org/ is the URL of the article.
-            article = article.replaceAll("\r\n|\n", " ");
-            String header = "http://www.gutenberg.org/";
-            int start = article.indexOf(header);
-            if (start > 0) {
-                int end = article.indexOf(" ", start);
-                if (end > start) {
-                    String address = article.substring(start, end).trim();
-                    return address;
-                }
-            }
-        }
-        return null;
-    }
 }
